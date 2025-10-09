@@ -10,11 +10,10 @@ docker build -t nose-ai .
 
 Execute in power shell
 
-```terminal
-docker run -d --gpus all --privileged -it -p 8000:3000 -p 8001:3001 `
-  -v "${PWD}:/ai" `
-  --name nose-ai-container `
-  nose-ai
+Execute this command in the root folder of this project
+
+```powershell
+docker run -d --gpus all --privileged -it -p 8000:3000 -p 8001:3001 -v .:/nose-ai --name nose-ai-container nose-ai
 ```
 
 ```terminal
@@ -33,4 +32,24 @@ if conda env nose-ai is not activates run this
 
 ```terminal
 conda activate nose-ai
+```
+
+```terminal
+cd frontend
+
+yarn
+
+yarn dev
+```
+
+Optional data samples or manularu download https://drive.google.com/drive/folders/15jsR9yy_pfDHiS9aE3HcYDgwtBbAneId content into backend/images/unprocessed
+
+```terminal
+python backend/images/unprocessed/populate.py
+```
+
+```terminal
+conda env update -f environment.yml
+conda env export > kodo.yml
+fastapi run backend/main.py --host 0.0.0.0 --port 3000
 ```

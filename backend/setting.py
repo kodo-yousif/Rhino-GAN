@@ -1,0 +1,45 @@
+from argparse import Namespace
+
+size = 1024
+cached_dir_name = 'cache'
+input_dir_name ='images/inputs'
+predictor_url = "https://drive.google.com/uc?id=1huhv8PYpNNKbGCLOaYUjOgR1pY5pmbJx"
+
+
+setting = Namespace(
+    video = True,
+    FS_path = "",
+    input_dir=input_dir_name,
+    landmark_lambda=0.1,
+    sign='realistic',
+    smooth=5,
+    size=size,
+    ckpt="pretrained_models/ffhq.pt",
+    channel_multiplier=2,
+    latent=512,
+    n_mlp=8,
+    device='cuda',
+    seed=None,
+    tile_latent=False,
+    opt_name='adam',
+    learning_rate=0.01,
+    lr_schedule='fixed',
+    save_intermediate=False,
+    save_interval=300,
+    verbose=True,
+    seg_ckpt='pretrained_models/seg.pth',
+    percept_lambda=1.0,
+    l2_lambda=1.0,
+    p_norm_lambda=0.001,
+    l_F_lambda=0.1,
+    ce_lambda=1.0,
+    style_lambda=4e4,
+    align_steps1=140,
+    align_steps2=100,
+    face_lambda=1.0,
+    hair_lambda=1.0,
+    blend_steps=400,
+    W_steps=1100,
+    FS_steps=250,
+    Tune_steps=50
+)
