@@ -36,11 +36,13 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 
 # NVM + Node.js v22
 ENV NVM_DIR=/root/.nvm
-RUN mkdir -p $NVM_DIR
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash && \
-    bash -c "source $NVM_DIR/nvm.sh && nvm install 22 && nvm alias default 22" && \
-    bash -c "source $NVM_DIR/nvm.sh && npm install -g npm@latest"
-
+RUN mkdir -p $NVM_DIR && \
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash && \
+    bash -c "source $NVM_DIR/nvm.sh && \
+             nvm install 22 && \
+             nvm alias default 22 && \
+             npm install -g npm@latest && \
+             corepack enable yarn"
 # Add NVM and Node to PATH
 ENV NODE_VERSION=22
 ENV PATH=$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
