@@ -20,7 +20,6 @@ export default function ImageViewer({
   node,
   landmarks,
   rightButton,
-  selectedModel,
   showLandmarks,
   showSegmentation,
   SegmentationData,
@@ -156,17 +155,15 @@ export default function ImageViewer({
       ]
     })
 
-    const payload: Partial<Record<keyof typeof modules | "model", any>> = {
-      model: selectedModel,
-    }
+    const payload: Partial<Record<keyof typeof modules | "model", any>> = {}
 
     try {
       if (modules.segmentation)
-        payload.segmentation = SegmentationData?.segmentedImage
+        payload.segmentation = JSON.stringify(SegmentationData?.segmentedImage)
 
       if (modules.noseStyle) payload.noseStyle = noseStyle
-      if (modules.landmarks) payload.landmarks = changedLandmarks
-      if (modules?.doStyle) payload.doStyle = modules.doStyle
+      if (modules.landmarks)
+        payload.landmarks = JSON.stringify(changedLandmarks)
 
       const {
         data: { message },
@@ -202,19 +199,6 @@ export default function ImageViewer({
         Please select an image
       </div>
     )
-
-  let showSlider = true
-
-  let sliderValue = 0
-
-  try {
-    if (activeLandmarkIndex !== null && showLandmarks) {
-      sliderValue = landmarks[activeLandmarkIndex][2]
-    }
-  } catch (error) {
-    sliderValue = 0
-    showSlider = false
-  }
 
   return (
     <div className="relative aspect-square">

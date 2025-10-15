@@ -2,6 +2,8 @@ import torch
 import torchvision
 import numpy as np
 from torch.nn import functional as F
+from models.face_parsing.model import seg_mean, seg_std
+
 toPIL = torchvision.transforms.ToPILImage()
 
 HAIR_REGION = 10
@@ -29,6 +31,13 @@ COLOR_MAP = np.array([
     [192, 192, 192],   # 15: light gray
 ], dtype=np.uint8)
 
+
+def get_face_segmentation_region(ctx, im_tensor):
+    im = ((im_tensor[0] + 1) / 2).detach().cpu().clamp(0, 1)
+    im = (ctx.downsample(im_tensor).clamp(0, 1) - seg_mean) / seg_std
+    seg, _, _ = ctx.seg(im)
+    seg = torch.argmax(seg, dim=1).long()
+    return seg
 
 def verbose(ctx, title, dict, loss, pbar):
     if ctx.opts.verbose:

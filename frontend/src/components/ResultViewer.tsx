@@ -24,9 +24,6 @@ const ResultViewer: React.FC<{ imagePath?: string }> = ({ imagePath }) => {
     resultPath = paths.join("/")
   }
 
-  console.log(1000, imPath)
-  console.log(1000, resultPath)
-
   let tuned = ""
 
   if (typeof imagePath === "string") {

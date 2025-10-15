@@ -1,4 +1,6 @@
 import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+import json
 import copy
 import torch
 import base64
@@ -24,7 +26,7 @@ from models.Tunning import FineTuneContext, Tunning
 from utils.helpers import COLOR_MAP, NOSE_REGION, SKIN_REGION
 from models.face_parsing.model import BiSeNet, seg_mean, seg_std
 from file_process import get_all, error_field, set_inversion_image
-from fastapi import FastAPI, Request, UploadFile, File, HTTPException, BackgroundTasks, Query, Form
+from fastapi import FastAPI, Request, UploadFile, File, HTTPException, BackgroundTasks, Query
 
 logger.add("app.log", rotation="5 MB", retention="10 days", level="INFO")
 logger.info("🚀 Nose-AI FastAPI starting...")
@@ -152,25 +154,27 @@ def start_fine_tune(item : FineTuneContext):
 @app.post("/fine-tune")
 async def image_fine_tune(
     background_tasks: BackgroundTasks, body: FineTuneRequest):
-    noseStyle = body.noseStyle
     fullPath = body.fullPath
+    noseStyle = body.noseStyle
+    landmarks = body.landmarks
+    segmentation = body.segmentation
 
-    # if segmentation is None and landmarks is None and noseStyle is None:
-    #     print("No Tune parameter is provided !!!!!!")
-    #     return "Please send tunning parameter to tune the image based on it"
+    if segmentation is None and landmarks is None and ( noseStyle is None or noseStyle == fullPath ) :
+        print("No Tune parameter is provided !!!!!!")
+        return "Please send tunning parameter to tune the image based on it"
 
 
-    # try:
-    #     if landmarks is not None:
-    #         landmarks = json.loads(landmarks)  # should be like "[[1,2,3,1], [4,5,6,0]]"
-    # except json.JSONDecodeError:
-    #     raise HTTPException(status_code=400, detail="Invalid JSON format for mask or landmarks")
+    try:
+        if landmarks is not None:
+            landmarks = json.loads(landmarks)  # should be like "[[1,2,3,1], [4,5,6,0]]"
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON format for mask or landmarks")
     
-    # try:
-    #     if segmentation is not None:
-    #         segmentation = json.loads(segmentation)  # should be like 512  512
-    # except json.JSONDecodeError:
-    #     raise HTTPException(status_code=400, detail="Invalid JSON format for mask or segmentation")
+    try:
+        if segmentation is not None:
+            segmentation = json.loads(segmentation)  # should be like 512  512
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON format for mask or segmentation")
 
 
     ref_full_path = os.path.join(setting.output_dir, fullPath)
@@ -190,22 +194,22 @@ async def image_fine_tune(
     global imageQueue
     global currentWorkers
 
-    if full_nose_path is not None or full_nose_path == ref_full_path:
-        inversion = {
-        "current_step": 0,        
-        "total_steps": setting.Transfer_restructure_steps + setting.Transfer_perceptual_steps,
-        }
-        inversion_name =  "Transfer-" + Path(ref_full_path).stem + Path(full_nose_path).stem
-    else:
+    if full_nose_path == "self" or ref_full_path == full_nose_path or full_nose_path is None:
         inversion_name =  "Tunning-" + Path(ref_full_path).stem
         inversion = {
         "current_step": 0,        
         "total_steps": setting.Tune_steps,
         }
+    else:
+        inversion = {
+        "current_step": 0,        
+        "total_steps": setting.Transfer_restructure_steps + setting.Transfer_perceptual_steps,
+        }
+        inversion_name =  "Transfer-" + Path(ref_full_path).stem + Path(full_nose_path).stem
 
     set_inversion_image(inversion_name, inversion)
     
-    imageItem = FineTuneContext(inversion_name = inversion_name, ref_path = ref_full_path, nose_path = full_nose_path, landmarks = None, segmentation = None)
+    imageItem = FineTuneContext(inversion_name = inversion_name, ref_path = ref_full_path, nose_path = full_nose_path, landmarks = landmarks, segmentation = segmentation)
 
     if (currentWorkers == maxWorkers):
         imageQueue.put(imageItem)
