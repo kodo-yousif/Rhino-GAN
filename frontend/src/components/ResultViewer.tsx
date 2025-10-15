@@ -31,10 +31,10 @@ const ResultViewer: React.FC<{ imagePath?: string }> = ({ imagePath }) => {
 
     const fetchImage = async () => {
       try {
-        const baseUrl = `${protocol}//${hostname}:3001/get-image?fullPath=${encodeURIComponent(
+        const baseUrl = `${protocol}//${hostname}:8001/get-image?im_name=${encodeURIComponent(
           resultPath
         )}`
-        const res = await fetch(baseUrl, { method: "HEAD", cache: "no-store" })
+        const res = await fetch(baseUrl, { cache: "no-store" })
         if (res.ok) {
           setExists(true)
           // 🔥 Add timestamp to bypass browser cache
@@ -86,7 +86,7 @@ const ResultViewer: React.FC<{ imagePath?: string }> = ({ imagePath }) => {
               itemOne={
                 <img
                   alt="Generated Result"
-                  src={`${protocol}//${hostname}:3001/get-image?fullPath=${encodeURIComponent(
+                  src={`${protocol}//${hostname}:8001/get-image?im_name=${encodeURIComponent(
                     nodes[0]?.fullPath || ""
                   )}&_t=${Date.now()}`}
                   className="w-full h-full object-cover rounded"
@@ -94,7 +94,7 @@ const ResultViewer: React.FC<{ imagePath?: string }> = ({ imagePath }) => {
               }
               itemTwo={
                 <img
-                  src={`${protocol}//${hostname}:3001/get-image?fullPath=${encodeURIComponent(
+                  src={`${protocol}//${hostname}:8001/get-image?im_name=${encodeURIComponent(
                     resultPath
                   )}&_t=${Date.now()}`}
                   alt="Generated Result"

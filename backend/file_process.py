@@ -54,3 +54,20 @@ def set_inversion_image(fieldName, jsonObject):
         with open(path, 'w') as f:
             json.dump(data, f)
             
+
+def increment_inversion_step(filePath):
+    fieldName = os.path.basename(filePath)
+    
+    with lock:
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                data = json.load(f)
+        else:
+            data = {}
+
+        current_step = data[fieldName + "_inversion"]["current_step"] 
+
+        data[fieldName + "_inversion"]["current_step"] = current_step + 1
+
+        with open(path, 'w') as f:
+            json.dump(data, f)

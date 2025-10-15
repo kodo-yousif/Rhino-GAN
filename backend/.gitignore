@@ -48,6 +48,9 @@ MANIFEST
 *.svg
 *.ico
 
+images/output/*
+images/inputs/*
+images/unprocessed/*
 
 
 # PyInstaller

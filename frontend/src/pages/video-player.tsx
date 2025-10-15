@@ -11,7 +11,7 @@ export default function VideoPlayer() {
     const encodedPath = encodeURIComponent(filePath.replace(/\\/g, "/"))
 
     fetch(
-      `http://desktop-sgilgur.tail6aeec9.ts.net:3001/video?fullPath=${encodedPath}`
+      `http://desktop-sgilgur.tail6aeec9.ts.net:8001/video?fullPath=${encodedPath}`
     )
       .then((res) => res.arrayBuffer())
       .then((buffer) => {

@@ -8,7 +8,7 @@ import "./index.css"
 
 const { protocol, hostname } = window.location
 
-axios.defaults.baseURL = `${protocol}//${hostname}:3001`
+axios.defaults.baseURL = `${protocol}//${hostname}:8001`
 
 import App from "./App.tsx"
 

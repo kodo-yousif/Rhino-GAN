@@ -24,9 +24,11 @@ docker exec -it nose-ai-container bash
 echo -e "source /opt/conda/etc/profile.d/conda.sh\nconda activate nose-ai" >> ~/.bashrc
 
 exit
-
-docker exec -it nose-ai-container bash
 ```
+
+## Step 2
+
+download this link `https://drive.google.com/file/d/1AT6bNR2ppK8f2ETL_evT27f3R_oyWNHS/view?usp=sharing` into `backend/pretrained_models`
 
 if conda env nose-ai is not activates run this
 

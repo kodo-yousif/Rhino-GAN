@@ -1,4 +1,3 @@
-import { DarkModeSwitch } from "react-toggle-dark-mode"
 import { Outlet } from "react-router-dom"
 
 import {
@@ -12,7 +11,6 @@ import {
   notification,
 } from "antd"
 
-import { useDarkMode } from "@/global/useDarkMode"
 import { GlobalLoading } from "@/components/GlobalLoading"
 import { useImageNodes } from "../global/useImageNodes"
 import { useCallback, useEffect, useState } from "react"
@@ -26,14 +24,13 @@ const { Header, Content } = Layout
 const { protocol, hostname } = window.location
 
 export default function AppLayout() {
-  const { isDark, toggleTheme } = useDarkMode()
   const [images, setImages] = useState<string[]>([])
   const [selectImageModal, setSelectImageModal] = useState(false)
   const [selectStyleModal, setSelectStyleModal] = useState(false)
   const [api, contextHolder] = notification.useNotification()
 
   const {
-    token: { colorBgContainer, colorPrimary },
+    token: { colorBgContainer },
   } = theme.useToken()
 
   const {
@@ -75,11 +72,11 @@ export default function AppLayout() {
 
   const fetchTreeData = useCallback(async (signal?: AbortSignal) => {
     try {
-      const response = await axios.get("/list-files", {
-        params: { path: "something" },
+      const response = await axios.get("/get-images", {
         signal,
       })
-      setImages(response.data.filter((im: string) => !im.includes("tuned")))
+
+      setImages(response.data)
     } catch (error) {
       console.log(error)
 
@@ -137,7 +134,7 @@ export default function AppLayout() {
               ) : (
                 <img
                   className="size-[68px] rounded"
-                  src={`${protocol}//${hostname}:3001/get-image?fullPath=${selectedNode.fullPath}`}
+                  src={`${protocol}//${hostname}:8001/get-image?im_name=${selectedNode.fullPath}`}
                 />
               )}
             </button>
@@ -151,7 +148,7 @@ export default function AppLayout() {
               ) : (
                 <img
                   className="size-[68px] rounded"
-                  src={`${protocol}//${hostname}:3001/get-image?fullPath=${noseStyle}`}
+                  src={`${protocol}//${hostname}:8001/get-image?im_name=${noseStyle}`}
                 />
               )}
             </button>
@@ -230,7 +227,7 @@ export default function AppLayout() {
               type="primary"
               onClick={() => {
                 const { protocol, hostname } = window.location
-                const swaggerApi = `${protocol}//${hostname}:3002/docs`
+                const swaggerApi = `${protocol}//${hostname}:38001/docs`
                 window.open(swaggerApi, "_blank")
               }}
             >
@@ -261,7 +258,9 @@ export default function AppLayout() {
                           "!rounded-full": im === selectedNode?.fullPath,
                         }
                       )}
-                      src={`${protocol}//${hostname}:3001/get-image?fullPath=${im}`}
+                      src={`${protocol}//${hostname}:8001/get-image?im_name=${encodeURIComponent(
+                        im
+                      )}`}
                     />
                   ))}
               </div>
@@ -299,7 +298,9 @@ export default function AppLayout() {
                           "!rounded-full": im === noseStyle,
                         }
                       )}
-                      src={`${protocol}//${hostname}:3001/get-image?fullPath=${im}`}
+                      src={`${protocol}//${hostname}:8001/get-image?im_name=${encodeURIComponent(
+                        im
+                      )}`}
                     />
                   ))}
               </div>

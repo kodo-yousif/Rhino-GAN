@@ -73,12 +73,12 @@ export default function ImageViewer({
 
   const fetchImage = async (fullPath: string, signal: AbortSignal) => {
     try {
-      const { data } = await axios.get("/image", {
-        params: { fullPath },
-        signal,
-      })
-
-      console.log(data)
+      const { data } = await axios.get(
+        `/image-data?im_name=${encodeURIComponent(fullPath)}`,
+        {
+          signal,
+        }
+      )
 
       setSegmentationData({
         ...data.segmentationData,

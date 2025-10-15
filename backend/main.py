@@ -1,19 +1,27 @@
 import os
 import copy
 import torch
+import base64
 import uvicorn
 import traceback
 import threading
+import mimetypes
 from queue import Queue
 from pathlib import Path
 from loguru import logger
-from fastapi import FastAPI, Request, UploadFile, File, HTTPException, BackgroundTasks
-from file_process import get_all, error_field, set_inversion_image
-from fastapi.responses import JSONResponse
+from setting import setting
 from face_processor import process_face
 from models.Embedding import Embedding
-from setting import setting
-
+from fastapi.responses import FileResponse
+from utils.bicubic import BicubicDownSample
+from utils.fan import extract_face_landmarks
+from utils.model_utils import download_weight
+from datasets.image_dataset import ImagesDataset
+from fastapi.middleware.cors import CORSMiddleware
+from utils.helpers import COLOR_MAP, NOSE_REGION, SKIN_REGION
+from models.face_parsing.model import BiSeNet, seg_mean, seg_std
+from file_process import get_all, error_field, set_inversion_image
+from fastapi import FastAPI, Request, UploadFile, File, HTTPException, BackgroundTasks, Query
 
 logger.add("app.log", rotation="5 MB", retention="10 days", level="INFO")
 logger.info("🚀 Nose-AI FastAPI starting...")
@@ -26,11 +34,32 @@ app = FastAPI(
     redoc_url="/redoc",  
     openapi_url="/openapi.json"
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],      # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],      # Allow all HTTP methods
+    allow_headers=["*"],      # Allow all headers
+)
+
 configDetails = copy.deepcopy(setting)   
 
 maxWorkers = 1
 currentWorkers = 0
 imageQueue = Queue()
+
+downsample = BicubicDownSample(factor=setting.size // 512)
+
+seg = BiSeNet(n_classes=16)
+seg.to(setting.device)
+
+if not os.path.exists(setting.seg_ckpt):
+    download_weight(setting.seg_ckpt)
+seg.load_state_dict(torch.load(setting.seg_ckpt))
+for param in seg.parameters():
+    param.requires_grad = False
+seg.eval()
 
 
 ii2s = Embedding(copy.deepcopy(setting))
@@ -42,10 +71,8 @@ def process_inversion(image_name:str):
 
         torch.cuda.empty_cache()
 
-        ii2s.invert_images_in_W(image_name)
+        ii2s.invert_image(image_name)
 
-        # ii2s.invert_images_in_FS(item.im)
-        
         torch.cuda.empty_cache()
 
         if(imageQueue.empty()):
@@ -69,17 +96,74 @@ def start_inversion(image_name:str):
     thread.start()
 
 
+@app.get("/get-image")
+def get_image(im_name: str = Query(..., description="Image path inside images-outputs folder")):
+    image_path = os.path.join(setting.output_dir, im_name)
+    if not os.path.exists(image_path):
+        return {"error": f"Image '{im_name}' not found"}
+
+    mime_type, _ = mimetypes.guess_type(image_path)
+    return FileResponse(image_path, media_type=mime_type)
+
+@app.get("/image-data")
+def get_image_data(im_name: str = Query(..., description="Image path inside images-outputs folder")):
+    image_path = os.path.join(setting.output_dir, im_name)
+    
+    if not os.path.exists(image_path):
+        return {"error": f"Image '{im_name}' not found"}
+
+    with open(image_path, "rb") as f:
+        buffer = f.read()
+
+    ext = os.path.splitext(image_path)[1][1:]  # e.g. 'png'
+    base64_data = base64.b64encode(buffer).decode("utf-8")
+
+    base64_image = f"data:image/{ext};base64,{base64_data}"
+
+    global seg, downsample  
+
+    dataset = ImagesDataset(opts=setting, image_path=image_path)
+
+    img_H, _, _ = dataset[0]
+
+    im_tensor = img_H.unsqueeze(0).to(setting.device)
+
+    im = ((im_tensor[0] + 1) / 2).detach().cpu().clamp(0, 1)
+    im = (downsample(im_tensor).clamp(0, 1) - seg_mean) / seg_std
+    segmentted_im, _, _ = seg(im)
+    segmentted_im = torch.argmax(segmentted_im, dim=1).long().squeeze(0)
+
+    segmentationData =  {
+        "segmentedImage": segmentted_im.detach().cpu().numpy().tolist(),
+        "COLOR_MAP": COLOR_MAP.tolist(),
+        "regions" : {
+            "nose": NOSE_REGION,
+            "skin": SKIN_REGION,
+            } 
+        }
+
+    coords_tensor = extract_face_landmarks(
+        image_path=image_path,
+        device='cuda' if torch.cuda.is_available() else 'cpu',
+    )
+
+    return {
+        "image": base64_image,
+        "segmentationData": segmentationData,
+        "landmarks": coords_tensor.detach().cpu().tolist(),
+      }
+
 @app.post("/upload-image")
-async def upload_image(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+async def upload_image(background_tasks: BackgroundTasks, image: UploadFile = File(...)):
     allowed_types = ["image/png", "image/jpeg"]
     
-    if file.content_type not in allowed_types:
+    if image.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Only PNG and JPG images are allowed")
 
-    file_path = os.path.join(setting.unprocessed_dir, file.filename)
+    file_path = os.path.join(setting.unprocessed_dir, image.filename)
 
     with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
+        buffer.write(await image.read())
 
     process_face(file_path)
 
@@ -118,7 +202,7 @@ def get_images():
 
     return image_files
 
-@app.get("/files-status")
+@app.get("/processes")
 def files_status(request: Request):
     return get_all()
 
