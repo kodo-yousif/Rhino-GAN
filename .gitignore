@@ -2,4 +2,8 @@ app.log
 
 cache
 
+backend.log
+
 ./process.json
+
+process.json

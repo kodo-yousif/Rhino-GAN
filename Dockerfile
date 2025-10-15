@@ -63,6 +63,8 @@ ENV PATH="${CONDA_DIR}/envs/nose-ai/bin:${PATH}"
 
 WORKDIR /nose-ai
 
+RUN chmod +x /nose-ai/start_servers.sh
+
 EXPOSE 3000 3001
 
-CMD ["bash", "--login"]
+CMD ["bash", "/nose-ai/start_servers.sh"]
