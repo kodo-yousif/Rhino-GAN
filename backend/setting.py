@@ -1,15 +1,22 @@
+import os
 from argparse import Namespace
 
 size = 1024
 cached_dir_name = 'cache'
-input_dir_name ='images/inputs'
+input_dir_name ='/nose-ai/backend/images/inputs'
+output_dir_name ='/nose-ai/backend/images/output'
+unprocessed_dir_name ='/nose-ai/backend/images/unprocessed'
 predictor_url = "https://drive.google.com/uc?id=1huhv8PYpNNKbGCLOaYUjOgR1pY5pmbJx"
 
+for d in [input_dir_name, output_dir_name, unprocessed_dir_name]:
+    os.makedirs(d, exist_ok=True)
 
 setting = Namespace(
     video = True,
     FS_path = "",
     input_dir=input_dir_name,
+    output_dir=output_dir_name,
+    unprocessed_dir=unprocessed_dir_name,
     landmark_lambda=0.1,
     sign='realistic',
     smooth=5,
