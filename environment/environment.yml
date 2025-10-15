@@ -223,4 +223,4 @@ dependencies:
       - uritemplate==3.0.1
       - urllib3==1.26.7
       - wrapt==1.13.3
-prefix: /opt/conda/envs/nose-ai
+prefix: ~/.conda/envs/nose-ai
