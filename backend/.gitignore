@@ -2,7 +2,6 @@ ffhq_PCA.npz
 ffhq.pt
 input
 inputs
-output/*
 cache
 docs
 pretrained_models
@@ -39,7 +38,7 @@ MANIFEST
 # Ignore all image files
 *.jpg
 *.jpeg
-*.png
+# *.png
 *.gif
 *.bmp
 *.tiff
@@ -48,7 +47,7 @@ MANIFEST
 *.svg
 *.ico
 
-images/output/*
+# images/output/*
 images/inputs/*
 images/unprocessed/*
 
