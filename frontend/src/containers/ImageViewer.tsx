@@ -1,4 +1,4 @@
-import { Button, notification, Slider, Spin, theme } from "antd"
+import { Button, notification, Spin, theme } from "antd"
 import { Fragment, useEffect, useRef, useState } from "react"
 import axios from "axios"
 import classNames from "classnames"
@@ -144,41 +144,6 @@ export default function ImageViewer({
     )
   }
 
-  const invertImage = async () => {
-    const payload = {
-      video: true,
-      W_steps: 1100,
-      FS_steps: 250,
-      im: node?.fullPath,
-    }
-
-    try {
-      const {
-        data: { message },
-      } = await axios.post("/invert", payload)
-
-      api.success({
-        message: "Inversion",
-        description: message,
-        placement: "bottomRight",
-      })
-    } catch (error: any) {
-      console.log(error)
-      api.error({
-        message: "Inversion",
-        placement: "bottomRight",
-        description: (
-          <div>
-            <div>Inversion Failed:</div>
-            <div className="text-red-500">
-              {error?.response?.data || error?.message}
-            </div>
-          </div>
-        ),
-      })
-    }
-  }
-
   const styleImage = async () => {
     const changedLandmarks = landmarks.map((landmark, idx) => {
       return [
@@ -260,15 +225,9 @@ export default function ImageViewer({
           "right-20": rightButton,
         })}
       >
-        {node?.fullPath.includes("output") ? (
-          <Button type="primary" onClick={styleImage}>
-            Style
-          </Button>
-        ) : (
-          <Button type="primary" onClick={invertImage}>
-            Invert
-          </Button>
-        )}
+        <Button type="primary" onClick={styleImage}>
+          Style
+        </Button>
       </div>
       <div
         style={paperStyle}

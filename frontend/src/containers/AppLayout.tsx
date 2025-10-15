@@ -1,15 +1,6 @@
 import { Outlet } from "react-router-dom"
 
-import {
-  theme,
-  Button,
-  Layout,
-  Modal,
-  Switch,
-  Typography,
-  Checkbox,
-  notification,
-} from "antd"
+import { theme, Button, Layout, Modal, Switch, notification } from "antd"
 
 import { GlobalLoading } from "@/components/GlobalLoading"
 import { useImageNodes } from "../global/useImageNodes"
@@ -35,13 +26,11 @@ export default function AppLayout() {
 
   const {
     nodes,
-    modules,
     noseStyle,
     showSegmentation,
     showNodeLandmarks,
     setNoseStyle,
     setNodeByIndex,
-    toggleModuleByName,
     toggleLandmarkByIndex,
     toggleSegmentationByIndex,
   } = useImageNodes()
@@ -95,7 +84,6 @@ export default function AppLayout() {
       const {
         data: { message },
       } = await axios.post("/fine-tune", {
-        model: "f",
         fullPath: selectedNode?.fullPath,
         noseStyle,
       })
@@ -170,32 +158,6 @@ export default function AppLayout() {
                     checked={showSegmentation[0]}
                     onChange={() => toggleSegmentationByIndex(0)}
                   />
-                </div>
-
-                <div className="flex gap-3 ms-10 items-center">
-                  <Typography.Text className="!m-0 font-bold">
-                    Modules:
-                  </Typography.Text>
-                  <Checkbox
-                    checked={modules.landmarks}
-                    onChange={() => toggleModuleByName("landmarks")}
-                  >
-                    Landmarks
-                  </Checkbox>
-
-                  <Checkbox
-                    checked={modules.segmentation}
-                    onChange={() => toggleModuleByName("segmentation")}
-                  >
-                    Segmentation
-                  </Checkbox>
-
-                  <Checkbox
-                    checked={modules.doStyle}
-                    onChange={() => toggleModuleByName("doStyle")}
-                  >
-                    Style
-                  </Checkbox>
                 </div>
               </div>
             ) : (

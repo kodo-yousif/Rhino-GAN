@@ -10,18 +10,21 @@ from queue import Queue
 from pathlib import Path
 from loguru import logger
 from setting import setting
-from face_processor import process_face
+from typing import Optional
+from pydantic import BaseModel
 from models.Embedding import Embedding
+from face_processor import process_face
 from fastapi.responses import FileResponse
 from utils.bicubic import BicubicDownSample
 from utils.fan import extract_face_landmarks
 from utils.model_utils import download_weight
 from datasets.image_dataset import ImagesDataset
 from fastapi.middleware.cors import CORSMiddleware
+from models.Tunning import FineTuneContext, Tunning
 from utils.helpers import COLOR_MAP, NOSE_REGION, SKIN_REGION
 from models.face_parsing.model import BiSeNet, seg_mean, seg_std
 from file_process import get_all, error_field, set_inversion_image
-from fastapi import FastAPI, Request, UploadFile, File, HTTPException, BackgroundTasks, Query
+from fastapi import FastAPI, Request, UploadFile, File, HTTPException, BackgroundTasks, Query, Form
 
 logger.add("app.log", rotation="5 MB", retention="10 days", level="INFO")
 logger.info("🚀 Nose-AI FastAPI starting...")
@@ -90,11 +93,9 @@ def process_inversion(image_name:str):
         else:
             process_inversion(imageQueue.get())
 
-
 def start_inversion(image_name:str):
     thread = threading.Thread(target=process_inversion, args = (image_name,))
     thread.start()
-
 
 @app.get("/get-image")
 def get_image(im_name: str = Query(..., description="Image path inside images-outputs folder")):
@@ -104,6 +105,116 @@ def get_image(im_name: str = Query(..., description="Image path inside images-ou
 
     mime_type, _ = mimetypes.guess_type(image_path)
     return FileResponse(image_path, media_type=mime_type)
+
+
+class FineTuneRequest(BaseModel):
+    fullPath: Optional[str] = None
+    noseStyle: Optional[str] = None
+    landmarks: Optional[str] = None
+    segmentation: Optional[str] = None
+
+tunning = Tunning(setting)
+def process_fine_tune(item:FineTuneContext):  
+    try:
+        global imageQueue
+        global currentWorkers
+
+        output_folder_path = os.path.join(Path(item.ref_path).parent, "tuned")
+        os.makedirs(output_folder_path, exist_ok=True)
+        
+        torch.cuda.empty_cache()
+
+        tunning.tune_image(item)
+
+        torch.cuda.empty_cache()
+
+        if(imageQueue.empty()):
+          currentWorkers = currentWorkers - 1
+        else:
+          process_fine_tune(imageQueue.get())
+        
+    except Exception as e: 
+        print(e)
+        logger.error(f"fine tunning processing error: {e}")
+
+        error_field(item.inversion_name)
+
+        if(imageQueue.empty()):
+            currentWorkers = currentWorkers - 1
+        else:
+            process_fine_tune(imageQueue.get())
+
+
+def start_fine_tune(item : FineTuneContext):
+    thread = threading.Thread(target=process_fine_tune, args = (item,))
+    thread.start()
+
+@app.post("/fine-tune")
+async def image_fine_tune(
+    background_tasks: BackgroundTasks, body: FineTuneRequest):
+    noseStyle = body.noseStyle
+    fullPath = body.fullPath
+
+    # if segmentation is None and landmarks is None and noseStyle is None:
+    #     print("No Tune parameter is provided !!!!!!")
+    #     return "Please send tunning parameter to tune the image based on it"
+
+
+    # try:
+    #     if landmarks is not None:
+    #         landmarks = json.loads(landmarks)  # should be like "[[1,2,3,1], [4,5,6,0]]"
+    # except json.JSONDecodeError:
+    #     raise HTTPException(status_code=400, detail="Invalid JSON format for mask or landmarks")
+    
+    # try:
+    #     if segmentation is not None:
+    #         segmentation = json.loads(segmentation)  # should be like 512  512
+    # except json.JSONDecodeError:
+    #     raise HTTPException(status_code=400, detail="Invalid JSON format for mask or segmentation")
+
+
+    ref_full_path = os.path.join(setting.output_dir, fullPath)
+    
+    if not fullPath or not os.path.exists(ref_full_path):
+        raise HTTPException(status_code=400, detail="Ref Image file does not exist.")
+
+    full_nose_path = None
+    if noseStyle != 'self' and noseStyle != fullPath:
+        full_nose_path = os.path.join(setting.output_dir, noseStyle)
+
+        if not noseStyle or not os.path.exists(full_nose_path):
+            raise HTTPException(status_code=400, detail="Nose Image file does not exist.")
+
+    
+    global maxWorkers
+    global imageQueue
+    global currentWorkers
+
+    if full_nose_path is not None or full_nose_path == ref_full_path:
+        inversion = {
+        "current_step": 0,        
+        "total_steps": setting.Transfer_restructure_steps + setting.Transfer_perceptual_steps,
+        }
+        inversion_name =  "Transfer-" + Path(ref_full_path).stem + Path(full_nose_path).stem
+    else:
+        inversion_name =  "Tunning-" + Path(ref_full_path).stem
+        inversion = {
+        "current_step": 0,        
+        "total_steps": setting.Tune_steps,
+        }
+
+    set_inversion_image(inversion_name, inversion)
+    
+    imageItem = FineTuneContext(inversion_name = inversion_name, ref_path = ref_full_path, nose_path = full_nose_path, landmarks = None, segmentation = None)
+
+    if (currentWorkers == maxWorkers):
+        imageQueue.put(imageItem)
+        return "Queued"
+    else: 
+        currentWorkers = currentWorkers + 1
+        background_tasks.add_task(start_fine_tune, imageItem)
+        return "Started"
+
 
 @app.get("/image-data")
 def get_image_data(im_name: str = Query(..., description="Image path inside images-outputs folder")):
@@ -224,4 +335,4 @@ def health_check():
 # -----------------------------------------------------
 if __name__ == "__main__":
     logger.info("✅ Listening on 0.0.0.0:3001")
-    uvicorn.run("main:app", host="0.0.0.0", port=3001, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=3001, reload=False, access_log=False)

@@ -14,7 +14,18 @@ const ResultViewer: React.FC<{ imagePath?: string }> = ({ imagePath }) => {
   const [exists, setExists] = useState(false)
 
   const imPath = nodes[0] ? nodes[0]?.fullPath : null
-  let resultPath = imPath ? imPath.replace("\\FS.png", "\\tuned\\FS.png") : null
+  let resultPath = null
+
+  if (imPath) {
+    let paths = imPath.split("/")
+
+    paths[paths.length - 1] = "tuned/FS.png"
+
+    resultPath = paths.join("/")
+  }
+
+  console.log(1000, imPath)
+  console.log(1000, resultPath)
 
   let tuned = ""
 

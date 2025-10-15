@@ -48,5 +48,11 @@ setting = Namespace(
     blend_steps=400,
     W_steps=1100,
     FS_steps=250,
-    Tune_steps=50
+    Tune_steps=50,
+    Transfer_restructure_steps=5,
+    Transfer_restructure_perceptual_lambda=0.1,
+    Transfer_perceptual_steps=30,
+    Transfer_perceptual_nose_lambda=0.1,
+    Transfer_perceptual_face_lambda=1.0,
+
 )
