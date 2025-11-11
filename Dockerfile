@@ -61,7 +61,10 @@ RUN conda clean -afy
 ENV CONDA_DEFAULT_ENV=nose-ai
 ENV PATH="${CONDA_DIR}/envs/nose-ai/bin:${PATH}"
 
+
 WORKDIR /nose-ai
+
+COPY ./start_servers.sh ./start_servers.sh
 
 RUN chmod +x /nose-ai/start_servers.sh
 

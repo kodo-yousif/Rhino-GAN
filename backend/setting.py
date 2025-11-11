@@ -56,6 +56,6 @@ setting = Namespace(
     Transfer_restructure_perceptual_lambda=0.1,
     Transfer_perceptual_steps=30,
     Transfer_perceptual_nose_lambda=0.1,
-    Transfer_perceptual_face_lambda=1.0,
+    Transfer_perceptual_face_lambda=1.0, 
 
 )

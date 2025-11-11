@@ -9,7 +9,7 @@ fa = face_alignment.FaceAlignment(face_alignment.LandmarksType.THREE_D, device="
 fa_model = fa.face_alignment_net.eval()
 
 def soft_argmax_2d(heatmaps, beta=100):
-    B, C, H, W = heatmaps.shape
+    B, C, H, W = heatmaps.shape 
     heatmaps = heatmaps.view(B * C, H * W)
     heatmaps = F.softmax(heatmaps * beta, dim=1)
 
