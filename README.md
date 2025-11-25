@@ -13,9 +13,9 @@ It enables realistic nose structure transfer (NSB) and precise shape refinement 
 Designed for clinical visualization, RhinoGAN received surgeon evaluation scores averaging 7.5/10 for realism and clinical usefulness.  
 This repository provides a fully functional Docker-based demo for research and experimentation.
 
-## Demo Video
+## [Demo Video](https://www.youtube.com/watch?v=NBWAY4dVwSM)
 
-[![Video](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/maxresdefault.jpg)](YOUR_YOUTUBE_LINK)
+[![Watch the Video](https://img.youtube.com/vi/NBWAY4dVwSM/maxresdefault.jpg)](https://www.youtube.com/watch?v=NBWAY4dVwSM)
 
 ## Quick Start (Docker Setup)
 
