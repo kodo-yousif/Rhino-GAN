@@ -1,72 +1,74 @@
-# nose-manipulation
+# RhinoGAN
 
-## Running steps
+![Hero Image](./images/samples.jpg)
 
-### Step 1
+## Framework Overview
 
-Note: your GPU must support driver 11.7 to run this docker file successfully, Else feel free to adjust the package versions to satisfy your GPU condition
+![Overview](./images/work-overflow.jpg)
 
-```terminal
-docker build -t nose-ai .
+## Introduction
+
+RhinoGAN is a surgeon-guided nasal editing system built on the FS latent space of StyleGAN2.  
+It enables realistic nose structure transfer (NSB) and precise shape refinement (NSR) using segmentation masks and landmarks—all while preserving facial identity.  
+Designed for clinical visualization, RhinoGAN received surgeon evaluation scores averaging 7.5/10 for realism and clinical usefulness.  
+This repository provides a fully functional Docker-based demo for research and experimentation.
+
+## Demo Video
+
+[![Video](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/maxresdefault.jpg)](YOUR_YOUTUBE_LINK)
+
+## Quick Start (Docker Setup)
+
+Requirements:
+
+- NVIDIA GPU
+- Docker installed
+- Docker daemon running
+
+### 1. Clone the Project
+
+```bash
+git clone https://github.com/kodo-yousif/RhinoGAN
+cd RhinoGAN
 ```
 
-### Step 2
+### 2. Download Pretrained FFHQ Model
 
-download this link `https://drive.google.com/file/d/1AT6bNR2ppK8f2ETL_evT27f3R_oyWNHS/view?usp=sharing` into `backend/pretrained_models`
+Place into `backend/pretrained_models/`:
+https://drive.google.com/file/d/1AT6bNR2ppK8f2ETL_evT27f3R_oyWNHS/view?usp=sharing
 
-### Step 3
+### 3. Build Docker Image (Powershell in admin mode)
 
-Execute in power shell
-
-Execute this command in the root folder of this project
-
-```powershell
-docker run -d --gpus all --privileged -it -p 8000:3000 -p 8001:3001 -v .:/nose-ai --name nose-ai-container nose-ai
+```bash
+docker build -t rhinogan-image .
 ```
 
-<b>Now you can view the app at <a href="http://localhost:8000/">http://localhost:8000/</a></b>
-<b>Note: be careful initial load and requests are heavy due to model loads</b>
+### 4. Run Container (Powershell in admin mode)
 
-## to run the servers manually (Optional)
+```bash
+docker run -d --gpus all --privileged -it -p 8000:3000 -p 8001:3001 -v .:/nose-ai --name rhinogan-container rhinogan-image
+```
 
-```terminal
-docker exec -it nose-ai-container bash
+### 5. Access Container
 
+```bash
+docker exec -it rhinogan-container bash
+```
+
+### Optional Conda Fix
+
+```bash
 /opt/conda/bin/conda init bash
-
-echo -e "source /opt/conda/etc/profile.d/conda.sh\nconda activate nose-ai" >> ~/.bashrc
-
+conda activate nose-ai
+echo -e "source /opt/conda/etc/profile.d/conda.sh
+conda activate nose-ai" >> ~/.bashrc
 exit
 ```
 
-if conda env nose-ai is not activates run this
+### 6. Run backend and front end servers
 
-```terminal
-conda activate nose-ai
-```
+Please manually run the backend and frontend folder. You can watch the demo video for full tutorial.
 
-**To run the front end server**
+## 📧 Contact
 
-```terminal
-cd frontend
-
-yarn
-
-yarn dev
-```
-
-**To run the backend end server**
-
-```terminal
-conda activate nose-ai
-
-python backend/main.py
-```
-
-## to run the servers manually (Optional)
-
-This script is to data samples or manually download <a href="https://drive.google.com/drive/folders/15jsR9yy_pfDHiS9aE3HcYDgwtBbAneId">https://drive.google.com/drive/folders/15jsR9yy_pfDHiS9aE3HcYDgwtBbAneId</a> content into `backend/images/unprocessed`
-
-```terminal
-python backend/images/unprocessed/populate.py
-```
+kodo.yousif@gmail.com
