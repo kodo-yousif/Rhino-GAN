@@ -64,10 +64,7 @@ ENV PATH="${CONDA_DIR}/envs/nose-ai/bin:${PATH}"
 
 WORKDIR /nose-ai
 
-COPY ./start_servers.sh ./start_servers.sh
-
-RUN chmod +x /nose-ai/start_servers.sh
 
 EXPOSE 3000 3001
 
-CMD ["bash", "/nose-ai/start_servers.sh"]
+CMD ["bash"]
